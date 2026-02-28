@@ -17,6 +17,9 @@ const config = defineConfig({
     tanstackStart(),
     viteReact(),
   ],
+  preview: {
+    allowedHosts: ['oyster-app-hnfra.ondigitalocean.app']
+  }
 })
 
 export default config
