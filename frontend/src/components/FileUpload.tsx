@@ -47,17 +47,34 @@ export default function FileUpload({ onChange }: FileUploadProps) {
     }
   };
 
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
-    <div className="file-upload">
-      <label htmlFor="video-upload" className="block mb-2">
-        Upload an MP4 video
-      </label>
-      <input
-        id="video-upload"
-        type="file"
-        accept="video/mp4"
-        onChange={handleFileChange}
-      />
+    <div className="file-upload relative inline-block">
+      <button
+        type="button"
+        onClick={() => setMenuOpen((o) => !o)}
+        className="px-4 py-2 bg-blue-500 text-white rounded"
+      >
+        {file ? "Change file" : "Select video"}
+      </button>
+
+      {menuOpen && (
+        <div className="dropdown-menu absolute z-10 bg-white border mt-1 p-2 shadow">
+          <input
+            id="video-upload"
+            type="file"
+            accept="video/mp4"
+            onChange={(e) => {
+              handleFileChange(e);
+              setMenuOpen(false);
+            }}
+            className="block"
+          />
+          hello
+        </div>
+      )}
+
       {previewUrl && (
         <div className="preview mt-4">
           <video
@@ -68,11 +85,12 @@ export default function FileUpload({ onChange }: FileUploadProps) {
           />
         </div>
       )}
+
       {file && (
         <button
           type="button"
           onClick={handleUpload}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+          className="mt-4 px-4 py-2 bg-green-500 text-white rounded"
         >
           Upload
         </button>
