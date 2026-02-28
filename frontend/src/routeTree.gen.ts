@@ -15,7 +15,6 @@ import { Route as ReportRouteImport } from './routes/report'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as MapClientRouteImport } from './routes/map.client'
 
 const UploadRoute = UploadRouteImport.update({
   id: '/upload',
@@ -47,74 +46,44 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MapClientRoute = MapClientRouteImport.update({
-  id: '/client',
-  path: '/client',
-  getParentRoute: () => MapRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/map': typeof MapRouteWithChildren
+  '/map': typeof MapRoute
   '/report': typeof ReportRoute
   '/rss.xml': typeof RssDotxmlRoute
   '/upload': typeof UploadRoute
-  '/map/client': typeof MapClientRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/map': typeof MapRouteWithChildren
+  '/map': typeof MapRoute
   '/report': typeof ReportRoute
   '/rss.xml': typeof RssDotxmlRoute
   '/upload': typeof UploadRoute
-  '/map/client': typeof MapClientRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/map': typeof MapRouteWithChildren
+  '/map': typeof MapRoute
   '/report': typeof ReportRoute
   '/rss.xml': typeof RssDotxmlRoute
   '/upload': typeof UploadRoute
-  '/map/client': typeof MapClientRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/about'
-    | '/map'
-    | '/report'
-    | '/rss.xml'
-    | '/upload'
-    | '/map/client'
+  fullPaths: '/' | '/about' | '/map' | '/report' | '/rss.xml' | '/upload'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/about'
-    | '/map'
-    | '/report'
-    | '/rss.xml'
-    | '/upload'
-    | '/map/client'
-  id:
-    | '__root__'
-    | '/'
-    | '/about'
-    | '/map'
-    | '/report'
-    | '/rss.xml'
-    | '/upload'
-    | '/map/client'
+  to: '/' | '/about' | '/map' | '/report' | '/rss.xml' | '/upload'
+  id: '__root__' | '/' | '/about' | '/map' | '/report' | '/rss.xml' | '/upload'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  MapRoute: typeof MapRouteWithChildren
+  MapRoute: typeof MapRoute
   ReportRoute: typeof ReportRoute
   RssDotxmlRoute: typeof RssDotxmlRoute
   UploadRoute: typeof UploadRoute
@@ -164,30 +133,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/map/client': {
-      id: '/map/client'
-      path: '/client'
-      fullPath: '/map/client'
-      preLoaderRoute: typeof MapClientRouteImport
-      parentRoute: typeof MapRoute
-    }
   }
 }
-
-interface MapRouteChildren {
-  MapClientRoute: typeof MapClientRoute
-}
-
-const MapRouteChildren: MapRouteChildren = {
-  MapClientRoute: MapClientRoute,
-}
-
-const MapRouteWithChildren = MapRoute._addFileChildren(MapRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  MapRoute: MapRouteWithChildren,
+  MapRoute: MapRoute,
   ReportRoute: ReportRoute,
   RssDotxmlRoute: RssDotxmlRoute,
   UploadRoute: UploadRoute,
