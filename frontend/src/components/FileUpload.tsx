@@ -71,7 +71,6 @@ export default function FileUpload({ onChange }: FileUploadProps) {
             }}
             className="block"
           />
-          hello
         </div>
       )}
 
