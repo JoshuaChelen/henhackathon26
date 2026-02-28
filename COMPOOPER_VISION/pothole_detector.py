@@ -1,154 +1,98 @@
-from ultralytics import YOLO
+import os
 import cv2
-from PIL import Image
-import numpy as np
+import json
+from dotenv import load_dotenv
+from ultralytics import YOLO
+from supabase import create_client, Client
 
-# Load the model
+# --- 1. Supabase Setup ---
+load_dotenv()
+url: str = os.environ.get("SUPABASE_URL")
+key: str = os.environ.get("SUPABASE_KEY")
+supabase: Client = create_client(url, key)
+
 model = YOLO("Yolov8-fintuned-on-potholes.pt")
-#"hf://cazzz307/Pothole-Finetuned-YoloV8"
-# Single image inference
-def detect_potholes_image(image_path, output_path=None):
-    """
-    Detect potholes in a single image
-    
-    Args:
-        image_path (str): Path to input image
-        output_path (str): Path to save annotated image (optional)
-    
-    Returns:
-        results: Detection results
-    """
-    results = model(image_path)
-    
-    # Print detection results
-    for result in results:
-        boxes = result.boxes
-        if boxes is not None:
-            print(f"Found {len(boxes)} potholes")
-            for box in boxes:
-                confidence = box.conf[0].item()
-                print(f"Pothole detected with confidence: {confidence:.2f}")
-    
-    # Save annotated image if output path provided
-    if output_path:
-        annotated_frame = results[0].plot()
-        cv2.imwrite(output_path, annotated_frame)
-        print(f"Annotated image saved to: {output_path}")
-    
-    return results
 
-# Video inference
-def detect_potholes_video(video_path, output_path=None):
-    """
-    Detect potholes in a video
+def download_video_from_supabase(bucket_name, file_path):
+    """Downloads a video from Supabase Storage to a local file."""
+    local_filename = "temp_input_video.mp4"
+    try:
+        print(f"File path being requested: {file_path}")
+        with open(local_filename, "wb") as f:
+            # Note: .download() returns the raw bytes
+            res = supabase.storage.from_(bucket_name).download(file_path)
+            f.write(res)
+        print(f"✅ Successfully downloaded {file_path} from Supabase.")
+        return local_filename
+    except Exception as e:
+        print(f"❌ Error downloading from Supabase: {e}")
+        return None
+
+def extract_best_hazard(results):
+    # (Same logic as your previous version)
+    best_hazard = None
+    max_conf = -1.0
+    for result in results:
+        if result.boxes is not None and len(result.boxes) > 0:
+            confidences = result.boxes.conf.tolist()
+            coords = result.boxes.xyxy.tolist()
+            sizes = result.boxes.xywh.tolist()
+            for i in range(len(confidences)):
+                if confidences[i] > max_conf:
+                    max_conf = confidences[i]
+                    best_hazard = {
+                        "confidence": round(confidences[i], 4),
+                        "location_xyxy": [round(x, 2) for x in coords[i]],
+                        "width": round(sizes[i][2], 2),
+                        "height": round(sizes[i][3], 2),
+                        "center": [round(sizes[i][0], 2), round(sizes[i][1], 2)]
+                    }
+    return best_hazard
+
+def upload_to_supabase_db(source, hazard_data):
+    """Pushes detection data to the 'potholes' table."""
+    payload = {
+        "source_file": source,
+        "confidence": hazard_data["confidence"],
+        "location_xyxy": hazard_data["location_xyxy"],
+        "width": hazard_data["width"],
+        "height": hazard_data["height"],
+        "center": hazard_data["center"]
+    }
+    supabase.table("potholes").insert(payload).execute()
+
+def process_video_from_cloud(video_name):
+    # 1. Download from bucket
+    # Assuming path is: unprocessed_vids/video_name.mp4
+    local_path = download_video_from_supabase("unprocessed_vids", video_name)
     
-    Args:
-        video_path (str): Path to input video
-        output_path (str): Path to save annotated video (optional)
-    """
-    cap = cv2.VideoCapture(video_path)
-    
-    # Get video properties for output
-    if output_path:
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        fps = int(cap.get(cv2.CAP_PROP_FPS))
-        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
-    
-    frame_count = 0
-    total_detections = 0
+    if not local_path:
+        return
+
+    # 2. Process locally
+    cap = cv2.VideoCapture(local_path)
+    global_best_hazard = None
     
     while cap.isOpened():
         success, frame = cap.read()
-        if not success:
-            break
-            
-        # Run inference
+        if not success: break
+        
         results = model(frame)
+        current_best = extract_best_hazard(results)
         
-        # Count detections
-        for result in results:
-            if result.boxes is not None:
-                total_detections += len(result.boxes)
-        
-        # Annotate frame
-        annotated_frame = results[0].plot()
-        
-        # Save frame if output path provided
-        if output_path:
-            out.write(annotated_frame)
-        
-        # Display frame (optional)
-        cv2.imshow("Pothole Detection", annotated_frame)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
-            
-        frame_count += 1
-    
+        if current_best and (global_best_hazard is None or current_best['confidence'] > global_best_hazard['confidence']):
+            global_best_hazard = current_best
+
+    # 3. Upload result to DB
+    if global_best_hazard:
+        upload_to_supabase_db(video_name, global_best_hazard)
+        print(f"🏆 Best detection for {video_name} uploaded: {global_best_hazard['confidence']}")
+
     cap.release()
-    if output_path:
-        out.release()
-    cv2.destroyAllWindows()
-    
-    print(f"Processed {frame_count} frames")
-    print(f"Total potholes detected: {total_detections}")
+    # Clean up local temp file
+    if os.path.exists(local_path):
+        os.remove(local_path)
 
-# Batch processing for multiple images
-def detect_potholes_batch(image_folder, output_folder=None):
-    """
-    Process multiple images in a folder
-    
-    Args:
-        image_folder (str): Path to folder containing images
-        output_folder (str): Path to save annotated images (optional)
-    """
-    import os
-    import glob
-    
-    image_extensions = ['*.jpg', '*.jpeg', '*.png', '*.bmp', '*.tiff']
-    image_files = []
-    
-    for ext in image_extensions:
-        image_files.extend(glob.glob(os.path.join(image_folder, ext)))
-        image_files.extend(glob.glob(os.path.join(image_folder, ext.upper())))
-    
-    total_detections = 0
-    processed_images = 0
-    
-    for image_path in image_files:
-        try:
-            results = model(image_path)
-            
-            # Count detections
-            for result in results:
-                if result.boxes is not None:
-                    total_detections += len(result.boxes)
-                    print(f"{os.path.basename(image_path)}: {len(result.boxes)} potholes detected")
-            
-            # Save annotated image if output folder provided
-            if output_folder:
-                os.makedirs(output_folder, exist_ok=True)
-                annotated_frame = results[0].plot()
-                output_path = os.path.join(output_folder, f"annotated_{os.path.basename(image_path)}")
-                cv2.imwrite(output_path, annotated_frame)
-            
-            processed_images += 1
-            
-        except Exception as e:
-            print(f"Error processing {image_path}: {str(e)}")
-    
-    print(f"\nBatch processing complete:")
-    print(f"Processed images: {processed_images}")
-    print(f"Total potholes detected: {total_detections}")
-
-# Example usage
 if __name__ == "__main__":
-    # Single image
-    results = detect_potholes_image("pothole.jpg", "annotated_road.jpg")
-    
-    # Video processing
-    # detect_potholes_video("road_video.mp4", "annotated_road_video.mp4")
-    
-    # Batch processing
-    # detect_potholes_batch("road_images/", "annotated_images/")
+    # Pass just the filename string as requested
+    process_video_from_cloud("two_pothole.mp4")
