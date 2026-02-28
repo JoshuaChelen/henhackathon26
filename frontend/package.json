@@ -9,7 +9,7 @@
     "dev": "vite dev --port 3000",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "vite preview --port $PORT",
+    "start": "vite preview --host --port $PORT",
     "test": "vitest run"
   },
   "dependencies": {
