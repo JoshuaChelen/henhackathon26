@@ -1,3 +1,5 @@
+'use client'
+
 import { createFileRoute } from '@tanstack/react-router'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
