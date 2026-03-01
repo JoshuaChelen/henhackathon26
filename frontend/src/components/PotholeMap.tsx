@@ -26,6 +26,95 @@ interface ExportResponse {
   };
 }
 
+interface TopPotholeEntry {
+  id?: string | number;
+  severity?: string;
+  resolvedReports?: number;
+  latitude?: number;
+  longitude?: number;
+}
+
+interface AnalysisReport {
+  count?: number;
+  severityCounts?: Record<string, number>;
+  mostCommonSeverity?: string | null;
+  averageResolvedReports?: number;
+  maxResolvedReports?: number;
+  boundingBox?: {
+    minLat?: number | null;
+    maxLat?: number | null;
+    minLon?: number | null;
+    maxLon?: number | null;
+  };
+  top5ByResolvedReports?: TopPotholeEntry[];
+}
+
+const toNumber = (value: unknown): number | undefined => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string') {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : undefined
+  }
+  return undefined
+}
+
+const parseAnalysisReport = (value: unknown): AnalysisReport | null => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+
+  const report = value as Record<string, unknown>
+  const severityCountsRaw = report.severityCounts
+  const severityCounts: Record<string, number> = {}
+
+  if (severityCountsRaw && typeof severityCountsRaw === 'object' && !Array.isArray(severityCountsRaw)) {
+    Object.entries(severityCountsRaw as Record<string, unknown>).forEach(([key, entryValue]) => {
+      const num = toNumber(entryValue)
+      if (num !== undefined) {
+        severityCounts[key] = num
+      }
+    })
+  }
+
+  const boundingBoxRaw = report.boundingBox
+  const boundingBox =
+    boundingBoxRaw && typeof boundingBoxRaw === 'object' && !Array.isArray(boundingBoxRaw)
+      ? {
+          minLat: toNumber((boundingBoxRaw as Record<string, unknown>).minLat) ?? null,
+          maxLat: toNumber((boundingBoxRaw as Record<string, unknown>).maxLat) ?? null,
+          minLon: toNumber((boundingBoxRaw as Record<string, unknown>).minLon) ?? null,
+          maxLon: toNumber((boundingBoxRaw as Record<string, unknown>).maxLon) ?? null,
+        }
+      : undefined
+
+  const top5Raw = report.top5ByResolvedReports
+  const top5ByResolvedReports: TopPotholeEntry[] = Array.isArray(top5Raw)
+    ? top5Raw
+        .filter((entry) => entry && typeof entry === 'object' && !Array.isArray(entry))
+        .map((entry) => {
+          const row = entry as Record<string, unknown>
+          return {
+            id: typeof row.id === 'string' || typeof row.id === 'number' ? row.id : undefined,
+            severity: typeof row.severity === 'string' ? row.severity : undefined,
+            resolvedReports: toNumber(row.resolvedReports),
+            latitude: toNumber(row.latitude),
+            longitude: toNumber(row.longitude),
+          }
+        })
+    : []
+
+  return {
+    count: toNumber(report.count),
+    severityCounts,
+    mostCommonSeverity:
+      typeof report.mostCommonSeverity === 'string' || report.mostCommonSeverity === null
+        ? report.mostCommonSeverity
+        : undefined,
+    averageResolvedReports: toNumber(report.averageResolvedReports),
+    maxResolvedReports: toNumber(report.maxResolvedReports),
+    boundingBox,
+    top5ByResolvedReports,
+  }
+}
+
 const markResolved = async (id: string, currentValue: number) => {
   if (currentValue >= 3) {
     const { error } = await supabase
@@ -86,10 +175,12 @@ export default function PotholeMap() {
   const [clickedIds, setClickedIds] = useState<Set<string>>(new Set())
   const [analysis, setAnalysis] = useState<unknown | null>(null)
   const [analysisError, setAnalysisError] = useState<string | null>(null)
+  const [analysisDebug, setAnalysisDebug] = useState<string | null>(null)
   const [analysisUpdatedAt, setAnalysisUpdatedAt] = useState<string | null>(null)
   const [syncingAnalysis, setSyncingAnalysis] = useState(false)
   const lastSyncedPayloadRef = useRef<string | null>(null)
   const syncDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const parsedAnalysis = parseAnalysisReport(analysis)
 
   const { data: potholes, isLoading, isError, error } = useQuery<Pothole[]>({
     queryKey: ['potholes'],
@@ -113,17 +204,42 @@ export default function PotholeMap() {
         .then((result) => {
           lastSyncedPayloadRef.current = payload
 
-          if (result?.smalltalk?.analysis !== undefined) {
-            setAnalysis(result.smalltalk.analysis)
+          const rawAnalysis = result?.smalltalk?.analysis
+          let normalizedAnalysis: unknown = rawAnalysis
+
+          if (typeof rawAnalysis === 'string') {
+            try {
+              normalizedAnalysis = JSON.parse(rawAnalysis)
+            } catch {
+              normalizedAnalysis = rawAnalysis
+            }
+          }
+
+          const hasUsableAnalysis =
+            normalizedAnalysis !== null &&
+            normalizedAnalysis !== undefined &&
+            (typeof normalizedAnalysis === 'object' || typeof normalizedAnalysis === 'string')
+
+          if (hasUsableAnalysis) {
+            setAnalysis(normalizedAnalysis)
             setAnalysisUpdatedAt(new Date().toLocaleTimeString())
             setAnalysisError(null)
+            setAnalysisDebug(null)
           } else {
-            setAnalysisError('Backend responded without analysis data yet.')
+            const stderr = result?.smalltalk?.stderr?.trim()
+            const stdout = result?.smalltalk?.stdout?.trim()
+            setAnalysis(null)
+            setAnalysisUpdatedAt(null)
+            setAnalysisError('Backend completed, but returned no parsed analysis payload.')
+            setAnalysisDebug(stderr || stdout || 'No stdout/stderr details were returned.')
           }
         })
         .catch((error) => {
           console.error('Failed to export potholes JSON:', error)
+          setAnalysis(null)
+          setAnalysisUpdatedAt(null)
           setAnalysisError(error instanceof Error ? error.message : 'Failed to export potholes JSON')
+          setAnalysisDebug(null)
         })
         .finally(() => {
           setSyncingAnalysis(false)
@@ -205,7 +321,86 @@ export default function PotholeMap() {
         </div>
 
         {analysisError ? (
-          <p className="text-xs text-red-600 dark:text-red-400">{analysisError}</p>
+          <div className="space-y-1">
+            <p className="text-xs text-red-600 dark:text-red-400">{analysisError}</p>
+            {analysisDebug ? (
+              <pre className="max-h-24 overflow-auto rounded bg-red-50 p-2 text-[10px] text-red-700 dark:bg-red-950/50 dark:text-red-300">
+                {analysisDebug}
+              </pre>
+            ) : null}
+          </div>
+        ) : analysis && parsedAnalysis ? (
+          <div className="space-y-2 text-xs text-gray-700 dark:text-gray-200">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded bg-gray-50 p-2 dark:bg-gray-800">
+                <p className="text-[10px] uppercase text-gray-500 dark:text-gray-400">Total Potholes</p>
+                <p className="text-sm font-semibold">{parsedAnalysis.count ?? 'N/A'}</p>
+              </div>
+              <div className="rounded bg-gray-50 p-2 dark:bg-gray-800">
+                <p className="text-[10px] uppercase text-gray-500 dark:text-gray-400">Most Common Severity</p>
+                <p className="text-sm font-semibold uppercase">{parsedAnalysis.mostCommonSeverity ?? 'N/A'}</p>
+              </div>
+              <div className="rounded bg-gray-50 p-2 dark:bg-gray-800">
+                <p className="text-[10px] uppercase text-gray-500 dark:text-gray-400">Avg Resolved Reports</p>
+                <p className="text-sm font-semibold">
+                  {parsedAnalysis.averageResolvedReports !== undefined
+                    ? parsedAnalysis.averageResolvedReports.toFixed(2)
+                    : 'N/A'}
+                </p>
+              </div>
+              <div className="rounded bg-gray-50 p-2 dark:bg-gray-800">
+                <p className="text-[10px] uppercase text-gray-500 dark:text-gray-400">Max Resolved Reports</p>
+                <p className="text-sm font-semibold">{parsedAnalysis.maxResolvedReports ?? 'N/A'}</p>
+              </div>
+            </div>
+
+            <div className="rounded bg-gray-50 p-2 dark:bg-gray-800">
+              <p className="mb-1 text-[10px] uppercase text-gray-500 dark:text-gray-400">Severity Counts</p>
+              {Object.keys(parsedAnalysis.severityCounts || {}).length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(parsedAnalysis.severityCounts || {}).map(([severity, count]) => (
+                    <span key={severity} className="rounded border border-gray-200 px-2 py-0.5 dark:border-gray-700">
+                      {severity}: {count}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400">N/A</p>
+              )}
+            </div>
+
+            <div className="rounded bg-gray-50 p-2 dark:bg-gray-800">
+              <p className="mb-1 text-[10px] uppercase text-gray-500 dark:text-gray-400">Bounding Box</p>
+              <p>
+                Lat: {parsedAnalysis.boundingBox?.minLat ?? 'N/A'} to {parsedAnalysis.boundingBox?.maxLat ?? 'N/A'}
+              </p>
+              <p>
+                Lon: {parsedAnalysis.boundingBox?.minLon ?? 'N/A'} to {parsedAnalysis.boundingBox?.maxLon ?? 'N/A'}
+              </p>
+            </div>
+
+            <div className="rounded bg-gray-50 p-2 dark:bg-gray-800">
+              <p className="mb-1 text-[10px] uppercase text-gray-500 dark:text-gray-400">Top 5 by Resolved Reports</p>
+              {parsedAnalysis.top5ByResolvedReports && parsedAnalysis.top5ByResolvedReports.length > 0 ? (
+                <ul className="space-y-1">
+                  {parsedAnalysis.top5ByResolvedReports.map((entry, index) => (
+                    <li key={`${entry.id ?? index}-${index}`}>
+                      #{index + 1} id {entry.id ?? 'N/A'} · {entry.severity ?? 'N/A'} · resolved {entry.resolvedReports ?? 'N/A'}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400">N/A</p>
+              )}
+            </div>
+
+            <details>
+              <summary className="cursor-default text-[11px] text-gray-500 dark:text-gray-400">Raw JSON</summary>
+              <pre className="mt-1 max-h-32 overflow-auto rounded bg-gray-100 p-2 text-[10px] text-gray-700 dark:bg-gray-950 dark:text-gray-200">
+                {JSON.stringify(analysis, null, 2)}
+              </pre>
+            </details>
+          </div>
         ) : analysis ? (
           <pre className="max-h-48 overflow-auto rounded bg-gray-50 p-2 text-[11px] text-gray-700 dark:bg-gray-800 dark:text-gray-200">
             {JSON.stringify(analysis, null, 2)}
