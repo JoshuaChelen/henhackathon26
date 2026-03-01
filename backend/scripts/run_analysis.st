@@ -5,9 +5,10 @@ Input defaults to data/potholes.json when omitted.
 Output defaults to data/pothole_analysis.json when omitted.
 "
 
-| args inputPath outputPath stats analysis analysisJson |
+| args inputPath outputPath stats analysis analysisJson hazardFile outputRef outStream |
 
-SmalltalkImage current fileIn: 'scripts/hazard_statistics.st'.
+hazardFile := (FileLocator workingDirectory / 'scripts' / 'hazard_statistics.st') fullName.
+SmalltalkImage current fileIn: hazardFile.
 
 args := Smalltalk arguments.
 inputPath := (args size >= 1)
@@ -21,10 +22,11 @@ stats := PotholeStats fromJsonFile: inputPath.
 analysis := stats report.
 analysisJson := NeoJSONWriter toString: analysis.
 
-outputPath asFileReference ensureDelete.
-outputPath asFileReference writeStreamDo: [:stream |
-  stream nextPutAll: analysisJson
-].
+outputRef := outputPath asFileReference.
+outputRef ensureDelete.
+outStream := outputRef writeStream.
+outStream nextPutAll: analysisJson.
+outStream close.
 
 Transcript
   show: 'Smalltalk analysis written to '; show: outputPath; cr.
