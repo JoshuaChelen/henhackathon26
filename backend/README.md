@@ -23,6 +23,14 @@ The command supports placeholders:
 - `{input}`: path to generated pothole JSON
 - `{output}`: path where your Smalltalk script should write analysis JSON
 
+Recommended (Pharo) command example:
+
+```bash
+SMALLTALK_ANALYSIS_COMMAND="pharo --headless /home/ben/pharo/Pharo.image st scripts/run_analysis.st {input} {output}"
+```
+
+The script `scripts/run_analysis.st` loads `scripts/hazard_statistics.st`, reads `{input}`, computes stats, and writes JSON analysis to `{output}`.
+
 ## 3) Run
 
 ```bash
