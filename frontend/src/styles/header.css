@@ -1,0 +1,122 @@
+/* header.css - styles for the site header/navigation */
+
+/* overall header container */
+:root {
+  --header-height: 80px; /* keep in sync with .site-header height */
+}
+.site-header {
+  width: 100%;
+  /* transparent background to let page show through */
+  background-color: transparent;
+  box-shadow: none;
+  position: static;
+  height: var(--header-height);
+}
+
+.header-nav {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-start; /* align items to top edge */
+  justify-content: space-between;
+  padding: 0 1rem; /* keep horizontal padding for layout, no vertical */
+  height: auto; /* allow height driven by content */
+}
+
+/* logo section */
+.header-logo img {
+  height: 56px; /* bigger */
+  display: block;
+  margin-left: 12px; /* move inward */
+  margin-top: 8px;   /* top margin */
+}
+
+/* container for the middle navigation links */
+.header-links {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start; /* ensure items stick to top */
+}
+
+/* each tab is a link wrapping the sign background */
+.header-tab {
+  text-decoration: none;
+  color: var(--text-color, #333);
+  display: inline-flex;
+  align-items: flex-start; /* align to top */
+  justify-content: center;
+  position: relative;
+}
+
+.header-tab.active,
+.header-tab:hover {
+  filter: brightness(1.1);
+}
+
+/* sign background wrapper */
+.tab-sign-bg {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+
+  /* all tabs share the same width/aspect ratio */
+  width: 160px;      /* adjust as needed */
+  aspect-ratio: 781.4281 / 311.78888;
+  text-align: center;
+}
+
+.tab-sign-bg img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* ensure full graphic visible */
+  object-position: top center; /* pin graphic to top edge */
+  pointer-events: none;
+}
+
+.tab-sign-bg span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -40%); /* stronger nudge up */
+  font-family: 'TexatBold', sans-serif;
+  font-weight: normal;
+  z-index: 2;
+  width: 100%;
+  text-align: center;
+  line-height: 1.1;
+  pointer-events: none;
+  color: #222;
+  font-size: 1.4rem; /* increase as needed */  
+}
+
+/* right side utilities (theme toggle) */
+.header-right {
+  display: flex;
+  align-items: center;
+  margin-top: 12px; /* adjust as needed for spacing from top */
+}
+
+/* small spacer if needed */
+.header-right > * {
+  margin-left: 0.5rem;
+}
+
+/* ensure page content respects fixed header height */
+/* No extra padding needed for sticky header */
+
+/* Responsive: adjust --header-height if needed for mobile */
+@media (max-width: 600px) {
+  :root {
+    --header-height: 60px;
+  }
+  .site-header {
+    height: var(--header-height);
+  }
+}
