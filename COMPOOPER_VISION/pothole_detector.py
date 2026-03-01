@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import cv2
 import asyncio
@@ -8,17 +9,18 @@ from supabase import create_async_client, AsyncClient
 
 # --- 1. Supabase Config ---
 load_dotenv()
-url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_KEY")
+url = os.environ.get("SUPABASE_URL")
+key = os.environ.get("SUPABASE_KEY")
 
 # Load the local model
 model = YOLO("Yolov8-fintuned-on-potholes.pt")
 
 # Global client placeholder
-supabase: AsyncClient = None
+supabase = None
 
 async def download_video_from_supabase(bucket_name, file_path):
-    local_filename = f"temp_{int(time.time())}.mp4"
+    # Added timestamp to local filename to avoid local collisions
+    local_filename = f"temp_{int(time.time())}_{file_path.replace('/', '_')}"
     try:
         print(f"📥 Downloading {file_path}...")
         res = await supabase.storage.from_(bucket_name).download(file_path)
@@ -32,10 +34,14 @@ async def download_video_from_supabase(bucket_name, file_path):
 async def upload_image_to_supabase(local_file_path, storage_path):
     try:
         with open(local_file_path, 'rb') as f:
+            # FIX: Added upsert=True to handle file collisions
             await supabase.storage.from_("processed_images").upload(
                 path=storage_path,
                 file=f,
-                file_options={"content-type": "image/jpeg"}
+                file_options={
+                    "content-type": "image/jpeg",
+                    "upsert": "true"  # Overwrites if file exists
+                }
             )
         res = await supabase.storage.from_("processed_images").get_public_url(storage_path)
         return res
@@ -93,7 +99,6 @@ async def process_video_from_cloud(video_name):
         success, frame = cap.read()
         if not success: break
         
-        # YOLO inference (Synchronous)
         results = model(frame)
         current_best = extract_best_hazard(results)
         
@@ -102,10 +107,11 @@ async def process_video_from_cloud(video_name):
             global_best_frame = results[0].plot()
 
     if global_best_hazard and global_best_frame is not None:
-        temp_img_name = f"best_{video_name.replace('/', '_')}.jpg"
+        # Added timestamp to local temp image to prevent file lock issues
+        temp_img_name = f"best_{int(time.time())}_{video_name.replace('/', '_')}.jpg"
         cv2.imwrite(temp_img_name, global_best_frame)
 
-        storage_path = f"detections/{temp_img_name}"
+        storage_path = f"detections/{video_name.replace('/', '_')}.jpg"
         public_url = await upload_image_to_supabase(temp_img_name, storage_path)
 
         await update_supabase_db(video_name, global_best_hazard, public_url, "completed")
@@ -119,37 +125,32 @@ async def process_video_from_cloud(video_name):
     cap.release()
     if os.path.exists(local_path): os.remove(local_path)
 
-async def handle_new_upload(payload):
-    new_record = payload.get('new')
-    video_name = new_record.get('source_file')
-    status = new_record.get('status')
+def handle_new_upload(payload):
+    data = payload.get('data', {})
+    record = data.get('record', {})
+    
+    video_name = record.get('source_file')
+    status = record.get('status')
     
     if video_name and status == "pending":
-        print(f"\n✨ New event! Starting: {video_name}")
-        await process_video_from_cloud(video_name)
+        print(f"\n✨ Valid Event! Starting: {video_name}")
+        asyncio.create_task(process_video_from_cloud(video_name))
 
 async def start_listening():
     global supabase
     print("🚀 Initializing Async Supabase Client...")
-    
-    # CRITICAL FIX: await the client creation
     supabase = await create_async_client(url, key)
     
     print("👂 Listening for 'pending' entries in 'pothole_image_data'...")
-    
-    # Initialize channel
     channel = supabase.channel('pothole-realtime')
-    
-    # Setup listener for INSERT events
-    await channel.on(
-        "postgres_changes",
-        event="INSERT",
+    channel.on_postgres_changes(
+        event="*",
         schema="public",
         table="pothole_image_data",
         callback=handle_new_upload
-    ).subscribe()
+    )
+    await channel.subscribe()
 
-    # Keep the async loop alive
     while True:
         await asyncio.sleep(1)
 
