@@ -1,4 +1,3 @@
-import React from "react";
 import tumbleweedImg from "../assets/tumbleweed-png-tumbleweed-vector-11562851710dk3sfjdg07-removebg-preview.png";
 
 interface LoadingProps {
