@@ -8,7 +8,6 @@ export const Route = createFileRoute('/')({ component: App })
 function App() {
   return (
     <main className="relative min-h-screen flex items-center justify-center overflow-hidden" style={{ fontFamily: 'serif' }}>
-      <AnimatedBackground />
       {/* Content */}
       <div className="relative z-10 max-w-3xl p-8 rounded-xl bg-white/80 dark:bg-gray-900/80 shadow-xl border border-orange-200 dark:border-orange-700" style={{ boxShadow: '0 8px 32px 0 rgba(0,0,0,0.18)' }}>
         <h2 className="text-sm font-semibold uppercase tracking-wide text-orange-700 dark:text-orange-300" style={{ letterSpacing: '0.2em' }}>
