@@ -6,21 +6,21 @@ from dotenv import load_dotenv
 from ultralytics import YOLO
 from supabase import create_async_client, AsyncClient
 
-# --- 1. Supabase Setup ---
+# --- 1. Supabase Config ---
 load_dotenv()
 url: str = os.environ.get("SUPABASE_URL")
 key: str = os.environ.get("SUPABASE_KEY")
-# Use the Async client for Realtime support
-supabase: AsyncClient = create_async_client(url, key)
 
 # Load the local model
 model = YOLO("Yolov8-fintuned-on-potholes.pt")
+
+# Global client placeholder
+supabase: AsyncClient = None
 
 async def download_video_from_supabase(bucket_name, file_path):
     local_filename = f"temp_{int(time.time())}.mp4"
     try:
         print(f"📥 Downloading {file_path}...")
-        # Note: Storage operations in the async client still require await
         res = await supabase.storage.from_(bucket_name).download(file_path)
         with open(local_filename, "wb") as f:
             f.write(res)
@@ -76,7 +76,7 @@ async def update_supabase_db(source, hazard_data, image_url, status="completed")
     await supabase.table("pothole_image_data").update(payload).eq("source_file", source).execute()
 
 async def process_video_from_cloud(video_name):
-    # Set status to processing
+    print(f"⚙️ Setting {video_name} to 'processing'...")
     await supabase.table("pothole_image_data").update({"status": "processing"}).eq("source_file", video_name).execute()
 
     local_path = await download_video_from_supabase("unprocessed_vids", video_name)
@@ -93,7 +93,7 @@ async def process_video_from_cloud(video_name):
         success, frame = cap.read()
         if not success: break
         
-        # YOLO inference remains synchronous (blocking)
+        # YOLO inference (Synchronous)
         results = model(frame)
         current_best = extract_best_hazard(results)
         
@@ -129,13 +129,18 @@ async def handle_new_upload(payload):
         await process_video_from_cloud(video_name)
 
 async def start_listening():
-    print("🚀 Pothole Worker Active (Async Mode).")
+    global supabase
+    print("🚀 Initializing Async Supabase Client...")
+    
+    # CRITICAL FIX: await the client creation
+    supabase = await create_async_client(url, key)
+    
     print("👂 Listening for 'pending' entries in 'pothole_image_data'...")
     
     # Initialize channel
     channel = supabase.channel('pothole-realtime')
     
-    # Setup listener
+    # Setup listener for INSERT events
     await channel.on(
         "postgres_changes",
         event="INSERT",
@@ -144,7 +149,7 @@ async def start_listening():
         callback=handle_new_upload
     ).subscribe()
 
-    # Keep the async loop running
+    # Keep the async loop alive
     while True:
         await asyncio.sleep(1)
 
