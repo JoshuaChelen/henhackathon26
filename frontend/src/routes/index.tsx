@@ -15,17 +15,17 @@ function App() {
           Public Infrastructure Hub
         </h2>
         <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-orange-900 dark:text-orange-100 sm:text-5xl md:text-6xl" style={{ fontFamily: 'serif', textShadow: '2px 2px 0 #f2a85b, 4px 4px 0 #d7813b' }}>
-          Welcome to Pothole Tracker
+          Welcome to Tumble Tracker
         </h1>
         <p className="mt-4 text-xl text-orange-800 dark:text-orange-200" style={{ fontFamily: 'serif' }}>
-          Mapping user-reported pothole data to generate actionable city reports.
+          Mapping user-reported road hazard data to generate actionable city reports.
         </p>
         <div className="mt-8 flex flex-wrap gap-4">
           <Link
             to="/map"
             className="inline-flex items-center justify-center rounded-md border border-transparent bg-orange-700 px-6 py-3 text-base font-medium text-white hover:bg-orange-800 md:text-lg shadow-md font-sans"
           >
-            Open Pothole Map
+            Open Road Hazard Map
           </Link>
           <Link
             to="/upload"
