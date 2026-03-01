@@ -1,5 +1,6 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { supabase } from '../supabaseClient'
 import 'leaflet/dist/leaflet.css'
 
@@ -10,6 +11,26 @@ export interface Pothole {
   severity: 'low' | 'medium' | 'high';
   latitude: number;
   longitude: number;
+  resolved_count: number;
+}
+
+const markResolved = async (id: string, currentValue: number) => {
+  if (currentValue >= 3) {
+    const { error } = await supabase
+      .from('potholes_tagged')
+      .delete()
+      .eq('id', id);
+    if (error) throw new Error(error.message);
+    fetchPotholes();
+    return;
+  }
+  const { error } = await supabase
+    .from('potholes_tagged')  
+    .update({ resolved_count: currentValue += 1 })
+    .eq('id', id);
+    console.log("Current value:", currentValue);
+    if (error) throw new Error(error.message);
+    fetchPotholes();
 }
 
 const fetchPotholes = async (): Promise<Pothole[]> => {
@@ -24,6 +45,7 @@ const fetchPotholes = async (): Promise<Pothole[]> => {
 
 export default function PotholeMap() {
   const centerPosition: [number, number] = [39.6837, -75.7497]
+  const [clickedIds, setClickedIds] = useState<Set<string>>(new Set())
 
   const { data: potholes, isLoading, isError, error } = useQuery({
     queryKey: ['potholes'],
@@ -65,6 +87,20 @@ export default function PotholeMap() {
                 alt={`Pothole marked as ${pothole.severity}`} 
                 className="mt-2 w-full rounded-md object-cover"
               />
+              <button 
+                className={`mt-2 w-full text-white py-1 rounded-md text-sm transition-colors ${
+                  clickedIds.has(pothole.id)
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-blue-500 hover:bg-blue-600'
+                }`}
+                onClick={() => {
+                  markResolved(pothole.id, pothole.resolved_count);
+                  setClickedIds(prev => new Set(prev).add(pothole.id));
+                }}
+                disabled={clickedIds.has(pothole.id)}
+              >
+                {clickedIds.has(pothole.id) ? 'Marked as resolved' : 'Mark as resolved'}
+              </button>
             </div>
           </Popup>
         </Marker>
