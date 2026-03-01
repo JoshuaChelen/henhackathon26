@@ -1,4 +1,5 @@
 Authors: Benjamin Wootten, Magnus Culley, Andrew Orlov, Joshua Chelen
+
 Deployed site: https://tumbletracker.tech/
 
 Smalltalk can be found in backend/scripts, which contains both hazard_statistics.st and run_analysis.st.
@@ -8,7 +9,7 @@ This data is formatted back into JSON and sent back over to the frontend to be d
 
 
 
-##Inspiration
+## Inspiration
 
 Our main inspiration came from the theme of the hackathon. During the opening ceremony, we were told that the mayor had been captured, and we, as hackers, had to travel to various areas to find out where he was. We started asking ourselves: what kinds of dangers would hackers face along this perilous journey? How could we keep others safe and provide warnings?
 
