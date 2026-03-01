@@ -1,9 +1,21 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import L from 'leaflet';
+import pointerPin from '../assets/pointer-pin.svg';
 import { useQuery } from '@tanstack/react-query'
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { supabase } from '../supabaseClient'
 import 'leaflet/dist/leaflet.css'
+
+// Override default Leaflet marker icon
+const pointerIcon = new L.Icon({
+  iconUrl: pointerPin,
+  iconSize: [32, 32], // Adjust size as needed
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32],
+  className: 'custom-leaflet-marker',
+});
+L.Marker.prototype.options.icon = pointerIcon;
 
 export interface Pothole {
   id: string;
