@@ -1,0 +1,32 @@
+{
+  "count": 2,
+  "severityCounts": {
+    "high": 1,
+    "medium": 1
+  },
+  "mostCommonSeverity": "high",
+  "averageResolvedReports": 0.5,
+  "maxResolvedReports": 1,
+  "boundingBox": {
+    "minLat": 39.671,
+    "maxLat": 39.6980077073056,
+    "minLon": -75.765,
+    "maxLon": -75.7092761993408
+  },
+  "top5ByResolvedReports": [
+    {
+      "id": "67b42f4e-2b91-44df-a7a8-879345fc173b",
+      "severity": "medium",
+      "resolvedReports": 1,
+      "latitude": 39.6980077073056,
+      "longitude": -75.7092761993408
+    },
+    {
+      "id": "acc5310e-e1ee-4291-9e3b-76df8536b7bf",
+      "severity": "high",
+      "resolvedReports": 0,
+      "latitude": 39.671,
+      "longitude": -75.765
+    }
+  ]
+}

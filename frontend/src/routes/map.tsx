@@ -25,13 +25,13 @@ function MapPage() {
         </p>
       </div>
 
-      <div className="h-[600px] w-full overflow-hidden rounded-xl border border-gray-200 shadow-sm dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+      <div className="w-full">
         {isClient ? (
-          <Suspense fallback={<div className="flex h-full items-center justify-center font-medium">Loading map engine...</div>}>
+          <Suspense fallback={<div className="flex h-[600px] items-center justify-center rounded-xl border border-gray-200 bg-gray-50 font-medium shadow-sm dark:border-gray-800 dark:bg-gray-900">Loading map engine...</div>}>
             <ClientMap />
           </Suspense>
         ) : (
-          <div className="flex h-full items-center justify-center font-medium">
+          <div className="flex h-[600px] items-center justify-center rounded-xl border border-gray-200 bg-gray-50 font-medium shadow-sm dark:border-gray-800 dark:bg-gray-900">
             Initializing interface...
           </div>
         )}

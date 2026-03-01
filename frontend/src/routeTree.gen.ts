@@ -16,6 +16,7 @@ import { Route as MapRouteImport } from './routes/map'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReviewPotholeIdRouteImport } from './routes/review.$potholeId'
+import { Route as ApiPotholesExportRouteImport } from './routes/api.potholes-export'
 
 const UploadRoute = UploadRouteImport.update({
   id: '/upload',
@@ -52,6 +53,11 @@ const ReviewPotholeIdRoute = ReviewPotholeIdRouteImport.update({
   path: '/review/$potholeId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPotholesExportRoute = ApiPotholesExportRouteImport.update({
+  id: '/api/potholes-export',
+  path: '/api/potholes-export',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/report': typeof ReportRoute
   '/rss.xml': typeof RssDotxmlRoute
   '/upload': typeof UploadRoute
+  '/api/potholes-export': typeof ApiPotholesExportRoute
   '/review/$potholeId': typeof ReviewPotholeIdRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +76,7 @@ export interface FileRoutesByTo {
   '/report': typeof ReportRoute
   '/rss.xml': typeof RssDotxmlRoute
   '/upload': typeof UploadRoute
+  '/api/potholes-export': typeof ApiPotholesExportRoute
   '/review/$potholeId': typeof ReviewPotholeIdRoute
 }
 export interface FileRoutesById {
@@ -79,6 +87,7 @@ export interface FileRoutesById {
   '/report': typeof ReportRoute
   '/rss.xml': typeof RssDotxmlRoute
   '/upload': typeof UploadRoute
+  '/api/potholes-export': typeof ApiPotholesExportRoute
   '/review/$potholeId': typeof ReviewPotholeIdRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/report'
     | '/rss.xml'
     | '/upload'
+    | '/api/potholes-export'
     | '/review/$potholeId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/report'
     | '/rss.xml'
     | '/upload'
+    | '/api/potholes-export'
     | '/review/$potholeId'
   id:
     | '__root__'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/report'
     | '/rss.xml'
     | '/upload'
+    | '/api/potholes-export'
     | '/review/$potholeId'
   fileRoutesById: FileRoutesById
 }
@@ -118,6 +130,7 @@ export interface RootRouteChildren {
   ReportRoute: typeof ReportRoute
   RssDotxmlRoute: typeof RssDotxmlRoute
   UploadRoute: typeof UploadRoute
+  ApiPotholesExportRoute: typeof ApiPotholesExportRoute
   ReviewPotholeIdRoute: typeof ReviewPotholeIdRoute
 }
 
@@ -172,6 +185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReviewPotholeIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/potholes-export': {
+      id: '/api/potholes-export'
+      path: '/api/potholes-export'
+      fullPath: '/api/potholes-export'
+      preLoaderRoute: typeof ApiPotholesExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -182,6 +202,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReportRoute: ReportRoute,
   RssDotxmlRoute: RssDotxmlRoute,
   UploadRoute: UploadRoute,
+  ApiPotholesExportRoute: ApiPotholesExportRoute,
   ReviewPotholeIdRoute: ReviewPotholeIdRoute,
 }
 export const routeTree = rootRouteImport
