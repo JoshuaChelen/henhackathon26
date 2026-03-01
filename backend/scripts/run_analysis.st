@@ -37,6 +37,8 @@ Output defaults to data/pothole_analysis.json when omitted.
 
     Transcript
       show: 'Smalltalk analysis written to '; show: outputPath; cr.
+    Transcript
+      show: 'ANALYSIS_JSON:'; show: analysisJson; cr.
   ]
     on: Error
     do: [ :error |

@@ -21,6 +21,8 @@ interface ExportResponse {
     ok?: boolean;
     executed?: boolean;
     analysis?: unknown;
+    analysisSource?: string | null;
+    analysisParseError?: string | null;
     stdout?: string;
     stderr?: string;
   };
@@ -226,12 +228,13 @@ export default function PotholeMap() {
             setAnalysisError(null)
             setAnalysisDebug(null)
           } else {
+            const parseError = result?.smalltalk?.analysisParseError?.trim()
             const stderr = result?.smalltalk?.stderr?.trim()
             const stdout = result?.smalltalk?.stdout?.trim()
             setAnalysis(null)
             setAnalysisUpdatedAt(null)
             setAnalysisError('Backend completed, but returned no parsed analysis payload.')
-            setAnalysisDebug(stderr || stdout || 'No stdout/stderr details were returned.')
+            setAnalysisDebug(parseError || stderr || stdout || 'No stdout/stderr details were returned.')
           }
         })
         .catch((error) => {
