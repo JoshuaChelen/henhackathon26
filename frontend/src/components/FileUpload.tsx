@@ -150,7 +150,7 @@ export default function FileUpload({ onChange }: FileUploadProps) {
             {uploading ? "Uploading..." : "Upload"}
           </button>
         </div>)}
-        {uploading && <Loading />}
+        {uploading && <Loading loop={true} />}
         {message && (
           <p className="mt-2 text-green-600 text-center">{message}</p>
         )}
