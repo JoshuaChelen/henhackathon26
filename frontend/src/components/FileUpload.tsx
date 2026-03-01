@@ -3,8 +3,7 @@ import type { ChangeEvent } from "react";
 import uploadImg from "../assets/thehalaldesign-upload-6699084.png";
 import Loading from "./loading";
 import { createClient } from "@supabase/supabase-js";
-
-
+import { Link } from "@tanstack/react-router"; 
 
 interface FileUploadProps {
   onChange?: (file: File | null) => void;
@@ -16,12 +15,15 @@ export default function FileUpload({ onChange }: FileUploadProps) {
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [uploadedId, setUploadedId] = useState<string | null>(null);
 
   const applyFile = (selected: File | null) => {
     if (selected) {
       setFile(selected);
       setPreviewUrl(URL.createObjectURL(selected));
       onChange && onChange(selected);
+      setUploadedId(null); 
+      setMessage(null);
     } else {
       setFile(null);
       setPreviewUrl(null);
@@ -63,23 +65,21 @@ export default function FileUpload({ onChange }: FileUploadProps) {
         throw error;
       }
 
-      const { data: publicData } = supabase.storage.from(BUCKET).getPublicUrl(filename);
-      console.log("upload succeeded", data, publicData);
-      setMessage("Upload succeeded!");
-      // Optionally clear selected file / preview
-      // setFile(null);
-      // setPreviewUrl(null);
       const { data: dbData, error: dbError } = await supabase
         .from('pothole_image_data')
         .insert({
-          source_file: filename, // use the upload filename as identifier
+          source_file: filename,
           status: "pending"
-        });
+        })
+        .select()
+        .single();
 
       if (dbError) {
         console.error('Insert error:', dbError);
       } else {
         console.log('Inserted row:', dbData);
+        setUploadedId(dbData.id);
+        setMessage("Upload succeeded!");
       }
 
     } catch (err) {
@@ -87,7 +87,6 @@ export default function FileUpload({ onChange }: FileUploadProps) {
       alert("Upload failed: " + (err as any)?.message);
     } finally {
       setUploading(false);
-      
     }
   };
 
@@ -152,7 +151,7 @@ export default function FileUpload({ onChange }: FileUploadProps) {
         className="hidden"
       />
 
-      {file && (
+      {file && !uploadedId && (
         <div className="flex justify-center mt-4">
           <button
             type="button"
@@ -162,12 +161,23 @@ export default function FileUpload({ onChange }: FileUploadProps) {
           >
             {uploading ? "Uploading..." : "Upload"}
           </button>
-        </div>)}
-        {uploading && <Loading loop={true} />}
-        {message && (
-          <p className="mt-2 text-green-600 text-center">{message}</p>
-        )}
-      </div>
+        </div>
+      )}
+        
+      {uploading && <Loading loop={true} />}
+        
+      {message && uploadedId && (
+        <div className="mt-6 flex flex-col items-center space-y-4">
+          <p className="text-green-600 text-center font-bold">{message}</p>
+          <Link 
+            to="/review/$potholeId" 
+            params={{ potholeId: String(uploadedId) }}
+            className="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg shadow-md transition-colors"
+          >
+            Track Analysis
+          </Link>
+        </div>
+      )}
+    </div>
   );
 }
-
