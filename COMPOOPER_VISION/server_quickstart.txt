@@ -1,0 +1,46 @@
+=====================================================
+            POTHOLE DETECTION SERVER QUICKSTART
+=====================================================
+
+1. INITIAL SETUP (ONCE PER SESSION)
+-----------------------------------
+# Enter the project directory
+cd henhackathon26/COMPOOPER_VISION
+
+# Activate the virtual environment
+source venv/bin/activate
+
+2. RUNNING THE SERVER (PERSISTENT MODE)
+---------------------------------------
+# Start a new background session
+tmux new -s pothole-worker
+
+# Run the detection script
+python pothole_detector.py
+
+# DETACH from the session (Keep it running!)
+Press: Ctrl + B, then D
+
+3. MONITORING & DEBUGGING
+-------------------------
+# Re-attach to see the AI logs/progress
+tmux attach -t pothole-worker
+
+# Force stop the script
+Press: Ctrl + C
+
+# If "Duplicate Session" error occurs:
+tmux kill-session -t pothole-worker
+
+4. THE WORKFLOW
+---------------
+1. Website: Upload video to 'unprocessed_vids' bucket.
+2. Website: Insert row into 'pothole_image_data' with status='pending'.
+3. Python: Detects INSERT -> Downloads -> YOLO Inference -> Uploads.
+4. Database: Row status updates to 'completed' & 'image_url' is populated.
+
+5. COLLISION HANDLING
+---------------------
+- Storage: Uses "upsert=true" to overwrite existing detection images.
+- Local: Uses Unix timestamps in filenames to prevent read/write locks.
+=====================================================
