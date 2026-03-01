@@ -3,6 +3,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Footer from '../components/Footer'
+import AnimatedBackground from '../components/AnimatedBackground'
 import Header from '../components/Header'
 
 import appCss from '../styles.css?url'
@@ -42,12 +43,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
-      <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
+      <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)] min-h-screen flex flex-col">
+        <AnimatedBackground />
         <QueryClientProvider client={queryClient}>
           <Header />
-          {children}
+          <main className="flex-1">{children}</main>
           <Footer />
-          
           <TanStackDevtools
             config={{
               position: 'bottom-right',
@@ -59,9 +60,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               },
             ]}
           />
+          <Scripts />
         </QueryClientProvider>
-        
-        <Scripts />
       </body>
     </html>
   )
