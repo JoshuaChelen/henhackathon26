@@ -11,7 +11,7 @@ function UploadPage() {
       <main className="flex-1 flex flex-col mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Upload Dashcam Footage</h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">Upload video files for the computer vision model to parse and detect road anomalies.</p>
+          <p className="mt-2 text-black dark:text-black">Upload video files for the computer vision model to parse and detect road anomalies.</p>
         </div>
         <FileUpload></FileUpload>
       </main>
