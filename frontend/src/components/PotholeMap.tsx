@@ -59,7 +59,11 @@ const downloadPotholes = async (potholes: Pothole[]) => {
 
   if (!response.ok) {
     const result = await response.json().catch(() => null)
-    throw new Error(result?.error ?? 'Failed to write potholes.json to project files')
+    throw new Error(
+      result?.error
+        ? `${result.error}${result?.details?.cause ? ` | cause: ${result.details.cause}` : ''}${result?.hint ? ` | hint: ${result.hint}` : ''}`
+        : 'Failed to write potholes.json to project files',
+    )
   }
 }
 
