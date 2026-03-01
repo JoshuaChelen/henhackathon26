@@ -7,14 +7,14 @@ Output defaults to data/pothole_analysis.json when omitted.
 
 | args inputPath outputPath stats analysis analysisJson |
 
-FileStream fileIn: 'scripts/hazard_statistics.st'.
+SmalltalkImage current fileIn: 'scripts/hazard_statistics.st'.
 
 args := Smalltalk arguments.
 inputPath := (args size >= 1)
   ifTrue: [ args first ]
   ifFalse: [ 'data/potholes.json' ].
 outputPath := (args size >= 2)
-  ifTrue: [ args second ]
+  ifTrue: [ args at: 2 ]
   ifFalse: [ 'data/pothole_analysis.json' ].
 
 stats := PotholeStats fromJsonFile: inputPath.
