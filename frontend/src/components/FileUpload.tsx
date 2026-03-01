@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ChangeEvent } from "react";
 import uploadImg from "../assets/thehalaldesign-upload-6699084.png";
+import Loading from "./loading";
 import { createClient } from "@supabase/supabase-js";
 
 
@@ -36,6 +37,7 @@ export default function FileUpload({ onChange }: FileUploadProps) {
   const handleUpload = async () => {
     if (!file) return;
     try {
+      setMessage(null);
       setUploading(true);
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
       const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
@@ -143,10 +145,12 @@ export default function FileUpload({ onChange }: FileUploadProps) {
             type="button"
             onClick={handleUpload}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
+            disabled={uploading}
           >
-            Upload
+            {uploading ? "Uploading..." : "Upload"}
           </button>
         </div>)}
+        {uploading && <Loading />}
         {message && (
           <p className="mt-2 text-green-600 text-center">{message}</p>
         )}
