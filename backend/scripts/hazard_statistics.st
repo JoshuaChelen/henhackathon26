@@ -1,8 +1,12 @@
+"============================================================"
+" Domain model: single pothole record"
+"============================================================"
 Object subclass: #Pothole
     instanceVariableNames: 'id imageUrl date severity latitude longitude resolvedReports'
     classVariableNames: ''
     package: 'Potholes'.
 
+"Simple accessors used by reporting/statistics logic"
 Pothole >> id            ^ id
 Pothole >> severity      ^ severity
 Pothole >> latitude      ^ latitude
@@ -11,6 +15,7 @@ Pothole >> resolvedReports ^ resolvedReports
 Pothole >> date          ^ date
 Pothole >> imageUrl      ^ imageUrl
 
+"Initializer: normalize numeric fields as they are loaded"
 Pothole >> id: anId imageUrl: aUrl date: aDate severity: aSeverity latitude: lat longitude: lon resolvedReports: n
     id := anId.
     imageUrl := aUrl.
@@ -20,6 +25,7 @@ Pothole >> id: anId imageUrl: aUrl date: aDate severity: aSeverity latitude: lat
     longitude := lon asFloat.
     resolvedReports := n asInteger.
 
+"Factory: build a Pothole from dictionary payloads (camelCase or snake_case keys)"
 Pothole class >> fromDict: d
     "d can include either camelCase (#imageUrl, #resolvedReports) or snake_case (#image_url, #resolved_count) keys"
     | p parsedDate |
@@ -40,11 +46,15 @@ Pothole class >> fromDict: d
       resolvedReports: (d at: #resolvedReports ifAbsent: [ d at: #resolved_count ifAbsent: [ 0 ] ]).
     ^ p
 
+"============================================================"
+" Analytics container over a collection of potholes"
+"============================================================"
 Object subclass: #PotholeStats
     instanceVariableNames: 'potholes'
     classVariableNames: ''
     package: 'Potholes'.
 
+"Utility: convert JSON dictionaries to symbol-key dictionaries for easier access"
 PotholeStats class >> symbolizedDictionaryFrom: aDictionary
     | out |
     out := Dictionary new.
@@ -53,6 +63,7 @@ PotholeStats class >> symbolizedDictionaryFrom: aDictionary
     ].
     ^ out.
 
+"Load JSON file, parse rows, and create typed Pothole objects"
 PotholeStats class >> fromJsonFile: aPathString
     "Reads potholes JSON (array of objects) and returns a PotholeStats instance"
     | fileRef raw jsonArray potholeObjects |
@@ -68,24 +79,30 @@ PotholeStats class >> fromJsonFile: aPathString
 
     ^ self on: potholeObjects.
 
+"Convenience default input path used by command-line runner"
 PotholeStats class >> fromDefaultJson
     "Default path used by backend runner"
     ^ self fromJsonFile: 'data/potholes.json'.
 
+"Convenience helper for interactive transcript output"
 PotholeStats class >> printDefaultAnalysis
     "Loads potholes from default JSON path and prints a full statistical analysis"
     ^ (self fromDefaultJson) printAnalysis.
 
+"Construct stats wrapper from any collection"
 PotholeStats class >> on: aCollection
     ^ self new initializeOn: aCollection.
 
+"Store potholes as array for stable downstream operations"
 PotholeStats >> initializeOn: aCollection
     potholes := aCollection asArray.
     ^ self.
 
+"Basic aggregate: total pothole count"
 PotholeStats >> count
     ^ potholes size.
 
+"Aggregate by severity label"
 PotholeStats >> severityCounts
     "Returns Dictionary severityString -> count"
     | counts |
@@ -96,19 +113,23 @@ PotholeStats >> severityCounts
     ].
     ^ counts.
 
+"Aggregate: arithmetic mean of resolved reports"
 PotholeStats >> averageResolvedReports
     potholes isEmpty ifTrue: [ ^ 0 ].
     ^ (potholes collect: #resolvedReports) sum asFloat / potholes size.
 
+"Aggregate: maximum resolved reports"
 PotholeStats >> maxResolvedReports
     potholes isEmpty ifTrue: [ ^ 0 ].
     ^ (potholes collect: #resolvedReports) max.
 
+"Ranking: highest resolved report counts first"
 PotholeStats >> topNByResolvedReports: n
     "Returns the top n potholes (objects) by resolvedReports descending"
     ^ (potholes asSortedCollection: [:a :b | a resolvedReports > b resolvedReports])
         first: (n min: potholes size).
 
+"Geospatial summary: min/max latitude and longitude"
 PotholeStats >> boundingBox
     "Returns a Dictionary with #minLat #maxLat #minLon #maxLon"
     potholes isEmpty ifTrue: [
@@ -129,6 +150,7 @@ PotholeStats >> boundingBox
         at: #maxLon put: lons max;
         yourself.
 
+    "Mode-like metric: severity with highest frequency"
 PotholeStats >> mostCommonSeverity
     | counts bestKey bestVal |
     counts := self severityCounts.
@@ -139,6 +161,7 @@ PotholeStats >> mostCommonSeverity
         v > bestVal ifTrue: [ bestVal := v. bestKey := k ] ].
     ^ bestKey.
 
+"Primary structured output consumed by backend/frontend"
 PotholeStats >> report
     "Single useful bundle of stats"
     | r |
@@ -160,6 +183,7 @@ PotholeStats >> report
     ]).
     ^ r
 
+"Human-readable transcript report for debugging/manual runs"
 PotholeStats >> printAnalysis
     "Pretty-prints analysis to Transcript and returns the report dictionary"
     | r severityCounts bbox top5 |
