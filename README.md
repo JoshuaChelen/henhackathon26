@@ -58,3 +58,7 @@ Long term:
 -Integrate live dashcam feeds
 -Build a global network of hazard reporting
 
+## Tech Stack
+Tumble Tracker utilizes
+DigitalOcean, Supabase, Tanstack Start, Google Gemini, Opencv, Typescript, Python, Smalltalk
+
