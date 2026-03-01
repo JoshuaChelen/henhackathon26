@@ -18,7 +18,9 @@ const config = defineConfig({
     viteReact(),
   ],
   preview: {
-    allowedHosts: ['oyster-app-hnfra.ondigitalocean.app']
+    allowedHosts: ['oyster-app-hnfra.ondigitalocean.app',
+                  'tumbletracker.tech']
+    
   }
 })
 
