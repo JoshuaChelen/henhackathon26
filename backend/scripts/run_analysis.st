@@ -11,11 +11,11 @@ Output defaults to data/pothole_analysis.json when omitted.
     SmalltalkImage current fileIn: hazardFile.
 
     args := Smalltalk arguments.
-    inputPath := (args size >= 1)
-      ifTrue: [ args first ]
+    inputPath := (args size >= 2)
+      ifTrue: [ args at: (args size - 1) ]
       ifFalse: [ 'data/potholes.json' ].
     outputPath := (args size >= 2)
-      ifTrue: [ args at: 2 ]
+      ifTrue: [ args last ]
       ifFalse: [ 'data/pothole_analysis.json' ].
 
     statsClass := Smalltalk at: #PotholeStats ifAbsent: [
@@ -30,6 +30,7 @@ Output defaults to data/pothole_analysis.json when omitted.
     analysisJson := writerClass toString: analysis.
 
     outputRef := outputPath asFileReference.
+    outputRef parent ensureCreateDirectory.
     outputRef ensureDelete.
     stream := outputRef writeStream.
     stream nextPutAll: analysisJson.
