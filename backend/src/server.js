@@ -8,9 +8,27 @@ import { runSmalltalkAnalysis } from './runner.js'
 const app = express()
 
 const port = Number(process.env.PORT || 4000)
-const frontendOrigin = process.env.FRONTEND_ORIGIN || 'http://localhost:3000'
+const allowedOrigins = (
+  process.env.FRONTEND_ORIGINS ||
+  process.env.FRONTEND_ORIGIN ||
+  'http://localhost:3000'
+)
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean)
 
-app.use(cors({ origin: frontendOrigin }))
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true)
+        return
+      }
+
+      callback(new Error(`Not allowed by CORS: ${origin}`))
+    },
+  }),
+)
 app.use(express.json({ limit: '10mb' }))
 
 const potholeSchema = z.object({
