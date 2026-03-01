@@ -1,6 +1,7 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { supabase } from '../supabaseClient'
 import 'leaflet/dist/leaflet.css'
 
@@ -43,7 +44,12 @@ const fetchPotholes = async (): Promise<Pothole[]> => {
   return data as Pothole[];
 }
 
+function sendReport(pothole: Pothole, navigate: ReturnType<typeof useNavigate>) {
+  navigate({ to: '/report', state: { pothole } as any })
+}
+
 export default function PotholeMap() {
+  const navigate = useNavigate()
   const centerPosition: [number, number] = [39.6837, -75.7497]
   const [clickedIds, setClickedIds] = useState<Set<string>>(new Set())
 
@@ -100,6 +106,11 @@ export default function PotholeMap() {
                 disabled={clickedIds.has(pothole.id)}
               >
                 {clickedIds.has(pothole.id) ? 'Marked as resolved' : 'Mark as resolved'}
+              </button>
+              <button 
+                className="mt-2 w-full text-white py-1 rounded-md text-sm bg-red-500 hover:bg-red-600 transition-colors"
+                onClick={() => sendReport(pothole, navigate)}>
+                Generate City Report
               </button>
             </div>
           </Popup>
