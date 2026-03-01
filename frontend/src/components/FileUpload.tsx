@@ -1,6 +1,9 @@
 import { useState } from "react";
 import type { ChangeEvent } from "react";
 import uploadImg from "../assets/thehalaldesign-upload-6699084.png";
+import { createClient } from "@supabase/supabase-js";
+
+
 
 interface FileUploadProps {
   onChange?: (file: File | null) => void;
@@ -10,6 +13,8 @@ export default function FileUpload({ onChange }: FileUploadProps) {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
   const applyFile = (selected: File | null) => {
     if (selected) {
@@ -30,19 +35,44 @@ export default function FileUpload({ onChange }: FileUploadProps) {
 
   const handleUpload = async () => {
     if (!file) return;
-
-    const form = new FormData();
-    form.append("video", file);
-
     try {
-      const resp = await fetch("/api/upload-video", {
-        method: "POST",
-        body: form,
+      setUploading(true);
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+      const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+      const BUCKET = "unprocessed_vids";
+
+      if (!SUPABASE_URL || !SUPABASE_KEY) {
+        throw new Error("Supabase env vars not configured (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY)");
+      }
+
+      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      console.log("Uploading to bucket:", BUCKET);
+      const filename = `${Date.now()}_${file.name}`;
+
+      const { data, error } = await supabase.storage.from(BUCKET).upload(filename, file, {
+        contentType: file.type,
+        upsert: false,
       });
-      if (!resp.ok) throw new Error("Upload failed");
-      console.log("upload succeeded");
+
+      if (error) {
+        console.error("Supabase upload error:", error);
+        console.error("Bucket name tried:", BUCKET);
+        throw error;
+      }
+
+      const { data: publicData } = supabase.storage.from(BUCKET).getPublicUrl(filename);
+      console.log("upload succeeded", data, publicData);
+      setMessage("Upload succeeded!");
+      // Optionally clear selected file / preview
+      // setFile(null);
+      // setPreviewUrl(null);
+      
     } catch (err) {
       console.error(err);
+      alert("Upload failed: " + (err as any)?.message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -116,9 +146,11 @@ export default function FileUpload({ onChange }: FileUploadProps) {
           >
             Upload
           </button>
-        </div>
-      )}
-    </div>
+        </div>)}
+        {message && (
+          <p className="mt-2 text-green-600 text-center">{message}</p>
+        )}
+      </div>
   );
 }
 
