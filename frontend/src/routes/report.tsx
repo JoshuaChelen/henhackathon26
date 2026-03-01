@@ -2,6 +2,7 @@ import { createFileRoute, useLocation } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import AnimatedBackground from '../components/AnimatedBackground';
 
 export const Route = createFileRoute('/report')({
   component: ReportPage,
@@ -113,11 +114,11 @@ function ReportPage() {
   const handlePrint = () => window.print()
 
   return (
-    <div className="flex flex-col flex-1 min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
-      <main className="max-w-4xl mx-auto w-full space-y-8">
-        
+    <main className="relative min-h-screen flex flex-col flex-1 justify-center overflow-hidden p-8" style={{ fontFamily: 'serif' }}>
+      <AnimatedBackground />
+      <div className="relative z-10 max-w-4xl mx-auto w-full space-y-8">
         <section className="print:hidden bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-          <h1 className="text-2xl font-bold mb-4">Report Configuration</h1>
+          <h1 className="text-2xl font-normal text-gray-400 dark:text-gray-300 mb-4">Report Configuration</h1>
           
           <div className="space-y-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -184,7 +185,7 @@ function ReportPage() {
             </div>
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </main>
   )
 }
