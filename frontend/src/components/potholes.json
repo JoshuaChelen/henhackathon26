@@ -1,0 +1,20 @@
+[
+  {
+    "id": "acc5310e-e1ee-4291-9e3b-76df8536b7bf",
+    "image_url": "https://vgcrjfhhjxpzywohhmli.supabase.co/storage/v1/object/public/processed_images/generic_pothole.jpg",
+    "date": "2026-02-28",
+    "severity": "high",
+    "latitude": 39.671,
+    "longitude": -75.765,
+    "resolved_count": 0
+  },
+  {
+    "id": "67b42f4e-2b91-44df-a7a8-879345fc173b",
+    "image_url": "https://vgcrjfhhjxpzywohhmli.supabase.co/storage/v1/object/public/processed_images/generic_pothole.jpg",
+    "date": "2026-02-27",
+    "severity": "medium",
+    "latitude": 39.6980077073056,
+    "longitude": -75.7092761993408,
+    "resolved_count": 1
+  }
+]

@@ -1,0 +1,47 @@
+[
+  {
+    "id": "dedd2d95-9084-4584-9769-5f1be550a11c",
+    "image_url": "https://vgcrjfhhjxpzywohhmli.supabase.co/storage/v1/object/public/processed_images/detections/1772347114607_PXL_20260228_202216277.mp4.jpg",
+    "date": "2026-03-01",
+    "severity": "high",
+    "latitude": 39.6421961134904,
+    "longitude": -75.7151834092336,
+    "resolved_count": 0
+  },
+  {
+    "id": "5bbe2ee4-9fb0-4b04-a5d6-8d9bbfd34cc5",
+    "image_url": "https://vgcrjfhhjxpzywohhmli.supabase.co/storage/v1/object/public/processed_images/detections/1772349432885_new2.mp4.jpg",
+    "date": "2026-03-01",
+    "severity": "high",
+    "latitude": 39.6796296312321,
+    "longitude": -75.7535648345947,
+    "resolved_count": 0
+  },
+  {
+    "id": "dfae4c72-42be-497c-b14c-82f5a8e03c5e",
+    "image_url": "https://vgcrjfhhjxpzywohhmli.supabase.co/storage/v1/object/public/processed_images/detections/1772350445869_bam.mp4.jpg",
+    "date": "2026-03-01",
+    "severity": "medium",
+    "latitude": 39.7481159260663,
+    "longitude": -75.5667436122894,
+    "resolved_count": 0
+  },
+  {
+    "id": "acc5310e-e1ee-4291-9e3b-76df8536b7bf",
+    "image_url": "https://vgcrjfhhjxpzywohhmli.supabase.co/storage/v1/object/public/processed_images/generic_pothole.jpg",
+    "date": "2026-02-28",
+    "severity": "high",
+    "latitude": 39.671,
+    "longitude": -75.765,
+    "resolved_count": 0
+  },
+  {
+    "id": "67b42f4e-2b91-44df-a7a8-879345fc173b",
+    "image_url": "https://vgcrjfhhjxpzywohhmli.supabase.co/storage/v1/object/public/processed_images/generic_pothole.jpg",
+    "date": "2026-02-27",
+    "severity": "medium",
+    "latitude": 39.6980077073056,
+    "longitude": -75.7092761993408,
+    "resolved_count": 1
+  }
+]

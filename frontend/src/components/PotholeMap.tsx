@@ -1,6 +1,6 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { supabase } from '../supabaseClient'
 import 'leaflet/dist/leaflet.css'
@@ -48,16 +48,60 @@ function sendReport(pothole: Pothole, navigate: ReturnType<typeof useNavigate>) 
   navigate({ to: '/report', state: { pothole } as any })
 }
 
+const downloadPotholes = async (potholes: Pothole[]) => {
+  const response = await fetch('/api/potholes-export', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ potholes }),
+  })
+
+  if (!response.ok) {
+    const result = await response.json().catch(() => null)
+    throw new Error(result?.error ?? 'Failed to write potholes.json to project files')
+  }
+}
+
 export default function PotholeMap() {
   const navigate = useNavigate()
   const centerPosition: [number, number] = [39.6837, -75.7497]
   const [clickedIds, setClickedIds] = useState<Set<string>>(new Set())
+  const lastSyncedPayloadRef = useRef<string | null>(null)
+  const syncDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const { data: potholes, isLoading, isError, error } = useQuery({
+  const { data: potholes, isLoading, isError, error } = useQuery<Pothole[]>({
     queryKey: ['potholes'],
     queryFn: fetchPotholes,
-    refetchInterval: 10000, 
+    refetchInterval: 10000,
   });
+
+  useEffect(() => {
+    if (!potholes?.length) return
+
+    const payload = JSON.stringify(potholes)
+    if (lastSyncedPayloadRef.current === payload) return
+
+    if (syncDebounceRef.current) {
+      clearTimeout(syncDebounceRef.current)
+    }
+
+    syncDebounceRef.current = setTimeout(() => {
+      downloadPotholes(potholes)
+        .then(() => {
+          lastSyncedPayloadRef.current = payload
+        })
+        .catch((error) => {
+          console.error('Failed to export potholes JSON:', error)
+        })
+    }, 1500)
+
+    return () => {
+      if (syncDebounceRef.current) {
+        clearTimeout(syncDebounceRef.current)
+      }
+    }
+  }, [potholes]);
 
   if (isLoading) return <p className="p-4 font-semibold text-blue-600">Fetching live map data...</p>
   if (isError) return <p className="p-4 font-semibold text-red-600">Failed to load: {error.message}</p>
