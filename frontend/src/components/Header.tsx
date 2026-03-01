@@ -5,7 +5,7 @@ import '../styles/header.css'
 // assets
 import signSvg from '../assets/sign.svg'
 
-import ttSvg from '../assets/tt.svg'
+
 
 export default function Header() {
   return (
@@ -13,7 +13,7 @@ export default function Header() {
       <nav className="header-nav">
         {/* logo that takes you to home */}
         <Link to="/" className="header-logo" aria-label="Home">
-          <img src={ttSvg} alt="TumbleTracker logo" />
+          <img src="/favicon.svg" alt="TumbleTracker logo" />
         </Link>
 
         {/* navigation links with sign background */}
