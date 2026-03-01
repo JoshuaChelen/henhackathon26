@@ -1,53 +1,53 @@
 import { Link } from '@tanstack/react-router'
 import ThemeToggle from './ThemeToggle'
+import '../styles/header.css'
+
+// assets
+import signSvg from '../assets/sign.svg'
+
+import ttSvg from '../assets/tt.svg'
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-md dark:border-gray-800 dark:bg-gray-950/80">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <nav className="print:hidden flex h-16 items-center justify-between">
-          
-          {/* Logo */}
-          <div className="flex-shrink-0">
-            <Link to="/" className="text-xl font-bold text-gray-900 dark:text-white">
-              Tumble Tracker
-            </Link>
-          </div>
+    <header className="site-header">
+      <nav className="header-nav">
+        {/* logo that takes you to home */}
+        <Link to="/" className="header-logo" aria-label="Home">
+          <img src={ttSvg} alt="TumbleTracker logo" />
+        </Link>
 
-          {/* Navigation Links */}
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-4">
-              <Link 
-                to="/map" 
-                className="rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" 
-                activeProps={{ className: 'text-blue-600 dark:text-blue-400 font-semibold' }}
-              >
-                Map
-              </Link>
-              <Link 
-                to="/upload" 
-                className="rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" 
-                activeProps={{ className: 'text-blue-600 dark:text-blue-400 font-semibold' }}
-              >
-                Upload Video
-              </Link>
-              <Link 
-                to="/report" 
-                className="rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" 
-                activeProps={{ className: 'text-blue-600 dark:text-blue-400 font-semibold' }}
-              >
-                Generate Report
-              </Link>
+        {/* navigation links with sign background */}
+        <div className="header-links">
+          {/** Map */}
+          <Link to="/map" className="header-tab" activeProps={{ className: 'active' }}>
+            <div className="tab-sign-bg">
+              <img src={signSvg} alt="" aria-hidden="true" />
+              <span>Map</span>
             </div>
-          </div>
+          </Link>
 
-          {/* Right side */}
-          <div className="flex items-center">
-            <ThemeToggle />
-          </div>
-          
-        </nav>
-      </div>
+          {/** Upload Video */}
+          <Link to="/upload" className="header-tab" activeProps={{ className: 'active' }}>
+            <div className="tab-sign-bg">
+              <img src={signSvg} alt="" aria-hidden="true" />
+              <span>Upload</span>
+            </div>
+          </Link>
+
+          {/** Generate Report */}
+          <Link to="/report" className="header-tab" activeProps={{ className: 'active' }}>
+            <div className="tab-sign-bg">
+              <img src={signSvg} alt="" aria-hidden="true" />
+              <span>Report</span>
+            </div>
+          </Link>
+        </div>
+
+        {/* right side theme toggle */}
+        <div className="header-right">
+          <ThemeToggle />
+        </div>
+      </nav>
     </header>
   )
 }
