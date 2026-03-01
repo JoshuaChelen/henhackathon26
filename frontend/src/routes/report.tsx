@@ -93,7 +93,7 @@ function ReportPage() {
         - Date Reported: ${new Date(selectedPothole.date).toLocaleDateString()}
         
         Requirements:
-        - Mention this was detected via an automated dashcam computer vision system.
+        - Mention this was detected via an automated user reported pothole reporting system.
         - Urge an inspection based on the severity.
         - Sign as "Tumble Tracker Automated Reporting System".
         - Keep it under 200 words.
@@ -159,8 +159,8 @@ function ReportPage() {
           <div className="bg-white p-12 shadow-2xl rounded-sm border-t-8 border-blue-900 print:shadow-none print:border-none">
             <div className="flex justify-between items-end border-b pb-4 mb-8">
               <div>
-                <h2 className="text-3xl font-black text-blue-900">MAINTENANCE REQUEST</h2>
-                <p className="text-gray-500 font-mono">CASE ID: {selectedPothole?.id}</p>
+                <h2 className="text-3xl font-black text-blue-900">POTHOLE MAINTENANCE REQUEST</h2>
+                <p className="text-gray-500 font-mono">ID: {selectedPothole?.id}</p>
               </div>
               <button onClick={handlePrint} className="print:hidden bg-green-600 text-white px-4 py-2 rounded font-bold">
                 Save as PDF
