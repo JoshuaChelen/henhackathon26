@@ -1,17 +1,18 @@
 import tumbleweedImg from "../assets/tumbleweed-png-tumbleweed-vector-11562851710dk3sfjdg07-removebg-preview.png";
 
 interface LoadingProps {
-  // optional: allow overriding animation duration or vertical position later
   className?: string;
+  loop?: boolean; // true for continuous looping, false for single play
 }
 
-export default function Loading({ className = "" }: LoadingProps) {
+export default function Loading({ className = "", loop = false }: LoadingProps) {
+  const animationClass = loop ? 'tumbleweed-loop' : 'tumbleweed';
   return (
     <div className={`tumbleweed-wrapper ${className}`}>
       <img
         src={tumbleweedImg}
         alt="Loading tumbleweed"
-        className="tumbleweed"
+        className={animationClass}
       />
     </div>
   );
