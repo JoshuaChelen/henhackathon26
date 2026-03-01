@@ -260,12 +260,12 @@ export default function PotholeMap() {
   if (isError) return <p className="p-4 font-semibold text-red-600">Failed to load: {error.message}</p>
 
   return (
-    <div className="relative h-full w-full">
+    <div className="w-full">
       <MapContainer
         center={centerPosition}
         zoom={13}
         scrollWheelZoom={true}
-        className="h-full w-full z-0"
+        className="h-[600px] w-full z-0 overflow-hidden rounded-xl border border-gray-200 bg-gray-50 shadow-sm dark:border-gray-800 dark:bg-gray-900"
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -315,7 +315,7 @@ export default function PotholeMap() {
         ))}
       </MapContainer>
 
-      <div className="pointer-events-none absolute bottom-3 right-3 z-[1000] w-[360px] max-w-[calc(100%-1.5rem)] rounded-lg border border-gray-200 bg-white/95 p-3 shadow-sm dark:border-gray-700 dark:bg-gray-900/95">
+      <div className="mt-3 w-full rounded-lg border border-gray-200 bg-white/95 p-3 shadow-sm dark:border-gray-700 dark:bg-gray-900/95">
         <div className="mb-2 flex items-center justify-between">
           <p className="text-sm font-semibold text-gray-900 dark:text-white">Processed Analysis</p>
           <p className="text-xs text-gray-500 dark:text-gray-400">
