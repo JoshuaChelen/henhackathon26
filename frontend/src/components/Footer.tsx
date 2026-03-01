@@ -3,7 +3,7 @@ export default function Footer() {
 
   return (
     <footer
-      className="border-t border-[var(--line)] px-2 pb-2 pt-2 text-[var(--sea-ink-soft)] text-xs"
+      className="print:hidden border-t border-[var(--line)] px-2 pb-2 pt-2 text-[var(--sea-ink-soft)] text-xs"
       style={{ background: '#954022' }}
     >
       <div className="page-wrap flex flex-col items-center justify-between gap-2 text-center sm:flex-row sm:text-left">
