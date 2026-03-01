@@ -5,30 +5,37 @@ Input defaults to data/potholes.json when omitted.
 Output defaults to data/pothole_analysis.json when omitted.
 "
 
-| args inputPath outputPath stats analysis analysisJson hazardFile outputRef outStream |
+[
+  | args inputPath outputPath stats analysis analysisJson hazardFile outputRef |
 
-hazardFile := (FileLocator workingDirectory / 'scripts' / 'hazard_statistics.st') fullName.
-SmalltalkImage current fileIn: hazardFile.
+  hazardFile := (FileLocator workingDirectory / 'scripts' / 'hazard_statistics.st') fullName.
+  SmalltalkImage current fileIn: hazardFile.
 
-args := Smalltalk arguments.
-inputPath := (args size >= 1)
-  ifTrue: [ args first ]
-  ifFalse: [ 'data/potholes.json' ].
-outputPath := (args size >= 2)
-  ifTrue: [ args at: 2 ]
-  ifFalse: [ 'data/pothole_analysis.json' ].
+  args := Smalltalk arguments.
+  inputPath := (args size >= 1)
+    ifTrue: [ args first ]
+    ifFalse: [ 'data/potholes.json' ].
+  outputPath := (args size >= 2)
+    ifTrue: [ args at: 2 ]
+    ifFalse: [ 'data/pothole_analysis.json' ].
 
-stats := PotholeStats fromJsonFile: inputPath.
-analysis := stats report.
-analysisJson := NeoJSONWriter toString: analysis.
+  stats := PotholeStats fromJsonFile: inputPath.
+  analysis := stats report.
+  analysisJson := NeoJSONWriter toString: analysis.
 
-outputRef := outputPath asFileReference.
-outputRef ensureDelete.
-outStream := outputRef writeStream.
-outStream nextPutAll: analysisJson.
-outStream close.
+  outputRef := outputPath asFileReference.
+  outputRef ensureDelete.
+  outputRef writeStreamDo: [ :stream |
+    stream nextPutAll: analysisJson
+  ].
 
-Transcript
-  show: 'Smalltalk analysis written to '; show: outputPath; cr.
+  Transcript
+    show: 'Smalltalk analysis written to '; show: outputPath; cr.
+]
+  on: Error
+  do: [ :error |
+    Transcript show: 'Smalltalk analysis failed: '; show: error messageText; cr.
+    error pass
+  ].
 
 Smalltalk snapshot: false andQuit: true.
