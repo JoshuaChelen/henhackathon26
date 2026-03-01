@@ -1,0 +1,71 @@
+@keyframes spin360 {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spokes-spin {
+  transform-origin: 1053.32px 725.75px;
+  animation: spin360 8s linear infinite;
+}
+/* SVG background for the home page */
+.western-svg-bg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+  background: url('./assets/background.svg?v=1') center center/cover no-repeat;
+}
+.western-bg {
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.western-bg__sky {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 48vh;
+  z-index: 0;
+}
+
+.western-bg__sun {
+  position: absolute;
+  left: 50%;
+  top: 32vh;
+  transform: translateX(-50%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.western-bg__ground {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 55vh;
+  z-index: 1;
+}
+
+/* Optional: Responsive tweaks for smaller screens */
+@media (max-width: 600px) {
+  .western-bg__sky {
+    height: 38vh;
+  }
+  .western-bg__ground {
+    height: 65vh;
+  }
+  .western-bg__sun {
+    top: 22vh;
+    width: 180px !important;
+    height: 90px !important;
+  }
+}
