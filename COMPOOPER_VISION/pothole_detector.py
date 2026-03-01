@@ -14,22 +14,34 @@ supabase: Client = create_client(url, key)
 model = YOLO("Yolov8-fintuned-on-potholes.pt")
 
 def download_video_from_supabase(bucket_name, file_path):
-    """Downloads a video from Supabase Storage to a local file."""
     local_filename = "temp_input_video.mp4"
     try:
-        print(f"File path being requested: {file_path}")
         with open(local_filename, "wb") as f:
-            # Note: .download() returns the raw bytes
             res = supabase.storage.from_(bucket_name).download(file_path)
             f.write(res)
-        print(f"✅ Successfully downloaded {file_path} from Supabase.")
         return local_filename
     except Exception as e:
-        print(f"❌ Error downloading from Supabase: {e}")
+        print(f"❌ Error downloading: {e}")
+        return None
+
+def upload_image_to_supabase(local_file_path, storage_path):
+    """Uploads the annotated image to Supabase Storage and returns its URL."""
+    try:
+        with open(local_file_path, 'rb') as f:
+            supabase.storage.from_("processed_images").upload(
+                path=storage_path,
+                file=f,
+                file_options={"content-type": "image/jpeg"}
+            )
+        
+        # Construct the public URL to save in the DB
+        res = supabase.storage.from_("processed_images").get_public_url(storage_path)
+        return res
+    except Exception as e:
+        print(f"❌ Storage Upload Error: {e}")
         return None
 
 def extract_best_hazard(results):
-    # (Same logic as your previous version)
     best_hazard = None
     max_conf = -1.0
     for result in results:
@@ -49,29 +61,26 @@ def extract_best_hazard(results):
                     }
     return best_hazard
 
-def upload_to_supabase_db(source, hazard_data):
-    """Pushes detection data to the 'potholes' table."""
+def upload_to_supabase_db(source, hazard_data, image_url):
+    """Pushes detection data including the new image link."""
     payload = {
         "source_file": source,
         "confidence": hazard_data["confidence"],
         "location_xyxy": hazard_data["location_xyxy"],
         "width": hazard_data["width"],
         "height": hazard_data["height"],
-        "center": hazard_data["center"]
+        "center": hazard_data["center"],
+        "image_url": image_url # Make sure to add this column to your table!
     }
-    supabase.table("potholes").insert(payload).execute()
+    supabase.table("pothole_image_data").insert(payload).execute()
 
 def process_video_from_cloud(video_name):
-    # 1. Download from bucket
-    # Assuming path is: unprocessed_vids/video_name.mp4
     local_path = download_video_from_supabase("unprocessed_vids", video_name)
-    
-    if not local_path:
-        return
+    if not local_path: return
 
-    # 2. Process locally
     cap = cv2.VideoCapture(local_path)
     global_best_hazard = None
+    global_best_frame = None # To store the image data
     
     while cap.isOpened():
         success, frame = cap.read()
@@ -82,17 +91,28 @@ def process_video_from_cloud(video_name):
         
         if current_best and (global_best_hazard is None or current_best['confidence'] > global_best_hazard['confidence']):
             global_best_hazard = current_best
+            # Save the annotated image frame
+            global_best_frame = results[0].plot()
 
-    # 3. Upload result to DB
-    if global_best_hazard:
-        upload_to_supabase_db(video_name, global_best_hazard)
-        print(f"🏆 Best detection for {video_name} uploaded: {global_best_hazard['confidence']}")
+    if global_best_hazard and global_best_frame is not None:
+        # 1. Save frame locally temporarily
+        temp_img_name = f"best_{video_name.split('.')[0]}.jpg"
+        cv2.imwrite(temp_img_name, global_best_frame)
+
+        # 2. Upload to Storage
+        storage_path = f"detections/{temp_img_name}"
+        public_url = upload_image_to_supabase(temp_img_name, storage_path)
+
+        # 3. Upload to Database
+        upload_to_supabase_db(video_name, global_best_hazard, public_url)
+        
+        print(f"🏆 Processed {video_name}. Image at: {public_url}")
+
+        # Cleanup temp image
+        if os.path.exists(temp_img_name): os.remove(temp_img_name)
 
     cap.release()
-    # Clean up local temp file
-    if os.path.exists(local_path):
-        os.remove(local_path)
+    if os.path.exists(local_path): os.remove(local_path)
 
 if __name__ == "__main__":
-    # Pass just the filename string as requested
     process_video_from_cloud("two_pothole.mp4")
