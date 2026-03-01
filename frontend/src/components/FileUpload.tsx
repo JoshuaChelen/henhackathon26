@@ -69,12 +69,25 @@ export default function FileUpload({ onChange }: FileUploadProps) {
       // Optionally clear selected file / preview
       // setFile(null);
       // setPreviewUrl(null);
-      
+      const { data: dbData, error: dbError } = await supabase
+        .from('pothole_image_data')
+        .insert({
+          source_file: filename, // use the upload filename as identifier
+          status: "pending"
+        });
+
+      if (dbError) {
+        console.error('Insert error:', dbError);
+      } else {
+        console.log('Inserted row:', dbData);
+      }
+
     } catch (err) {
       console.error(err);
       alert("Upload failed: " + (err as any)?.message);
     } finally {
       setUploading(false);
+      
     }
   };
 
